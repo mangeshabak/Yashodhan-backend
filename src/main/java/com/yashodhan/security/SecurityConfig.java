@@ -44,7 +44,7 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://10.152.21.102:8080","http://localhost:8080","http://10.152.21.102:3000","http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("http://10.152.21.102:8080","http://localhost:8080","http://10.152.21.102:3000","http://localhost:3000","https://yashodhan.onrender.com","https://yashodhan-backend-1.onrender.com"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
