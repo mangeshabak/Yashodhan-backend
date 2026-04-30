@@ -75,38 +75,101 @@ public class AttendanceService {
 		return attendanceRepository.findAttendanceByEmployeeAndMonth(employeeId, month);
 	}
 
+	/*
+	 * public List<AttendanceDTO> getAllAttendance() {
+	 * 
+	 * List<Object[]> results = attendanceRepository.getAllAttendanceRaw();
+	 * 
+	 * List<AttendanceDTO> list = new ArrayList<>();
+	 * 
+	 * for (Object[] row : results) {
+	 * 
+	 * String employeeName = (String) row[0];
+	 * 
+	 * LocalDate date;
+	 * 
+	 * if (row[1] instanceof java.sql.Date) { date = ((java.sql.Date)
+	 * row[1]).toLocalDate(); } else if (row[1] instanceof java.time.LocalDateTime)
+	 * { date = ((LocalDateTime) row[1]).toLocalDate(); } else { date =
+	 * ((java.sql.Timestamp) row[1]).toLocalDateTime().toLocalDate(); }
+	 * 
+	 * LocalDateTime checkIn = row[2] != null ? (LocalDateTime) row[2] : null;
+	 * 
+	 * LocalDateTime checkOut = row[3] != null ? (LocalDateTime) row[3] : null;
+	 * 
+	 * Double checkInLat = row[4] != null ? ((Number) row[4]).doubleValue() : null;
+	 * Double checkInLng = row[5] != null ? ((Number) row[5]).doubleValue() : null;
+	 * Double checkOutLat = row[6] != null ? ((Number) row[6]).doubleValue() : null;
+	 * Double checkOutLng = row[7] != null ? ((Number) row[7]).doubleValue() : null;
+	 * 
+	 * list.add(new AttendanceDTO( employeeName, date, checkIn, checkOut,
+	 * checkInLat, checkInLng, checkOutLat, checkOutLng )); }
+	 * 
+	 * return list; }
+	 */
 	public List<AttendanceDTO> getAllAttendance() {
 
 	    List<Object[]> results = attendanceRepository.getAllAttendanceRaw();
-
 	    List<AttendanceDTO> list = new ArrayList<>();
 
 	    for (Object[] row : results) {
 
-	        String employeeName = (String) row[0];
+	        if (row == null) continue;
 
-	        LocalDate date;
+	        // ---------------- EMPLOYEE NAME ----------------
+	        String employeeName = row[0] != null ? String.valueOf(row[0]) : null;
 
-	        if (row[1] instanceof java.sql.Date) {
-	            date = ((java.sql.Date) row[1]).toLocalDate();
-	        } else if (row[1] instanceof java.time.LocalDateTime) {
-	            date = ((LocalDateTime) row[1]).toLocalDate();
-	        } else {
-	            date = ((java.sql.Timestamp) row[1]).toLocalDateTime().toLocalDate();
+	        // ---------------- DATE ----------------
+	        LocalDate date = null;
+	        try {
+	            if (row[1] instanceof java.sql.Date) {
+	                date = ((java.sql.Date) row[1]).toLocalDate();
+	            } else if (row[1] instanceof java.sql.Timestamp) {
+	                date = ((java.sql.Timestamp) row[1]).toLocalDateTime().toLocalDate();
+	            } else if (row[1] instanceof java.time.LocalDate) {
+	                date = (LocalDate) row[1];
+	            } else if (row[1] instanceof java.time.LocalDateTime) {
+	                date = ((LocalDateTime) row[1]).toLocalDate();
+	            } else if (row[1] != null) {
+	                date = LocalDate.parse(row[1].toString());
+	            }
+	        } catch (Exception e) {
+	            date = null;
 	        }
 
-	        LocalDateTime checkIn = row[2] != null
-	                ? (LocalDateTime) row[2]
-	                : null;
+	        // ---------------- CHECK-IN ----------------
+	        LocalDateTime checkIn = null;
+	        try {
+	            if (row[2] instanceof LocalDateTime) {
+	                checkIn = (LocalDateTime) row[2];
+	            } else if (row[2] instanceof java.sql.Timestamp) {
+	                checkIn = ((java.sql.Timestamp) row[2]).toLocalDateTime();
+	            } else if (row[2] != null) {
+	                checkIn = LocalDateTime.parse(row[2].toString());
+	            }
+	        } catch (Exception e) {
+	            checkIn = null;
+	        }
 
-	        LocalDateTime checkOut = row[3] != null
-	                ? (LocalDateTime) row[3]
-	                : null;
+	        // ---------------- CHECK-OUT ----------------
+	        LocalDateTime checkOut = null;
+	        try {
+	            if (row[3] instanceof LocalDateTime) {
+	                checkOut = (LocalDateTime) row[3];
+	            } else if (row[3] instanceof java.sql.Timestamp) {
+	                checkOut = ((java.sql.Timestamp) row[3]).toLocalDateTime();
+	            } else if (row[3] != null) {
+	                checkOut = LocalDateTime.parse(row[3].toString());
+	            }
+	        } catch (Exception e) {
+	            checkOut = null;
+	        }
 
-	        Double checkInLat = row[4] != null ? ((Number) row[4]).doubleValue() : null;
-	        Double checkInLng = row[5] != null ? ((Number) row[5]).doubleValue() : null;
-	        Double checkOutLat = row[6] != null ? ((Number) row[6]).doubleValue() : null;
-	        Double checkOutLng = row[7] != null ? ((Number) row[7]).doubleValue() : null;
+	        // ---------------- LAT/LNG SAFE CONVERSION ----------------
+	        Double checkInLat = toDouble(row[4]);
+	        Double checkInLng = toDouble(row[5]);
+	        Double checkOutLat = toDouble(row[6]);
+	        Double checkOutLng = toDouble(row[7]);
 
 	        list.add(new AttendanceDTO(
 	                employeeName,
@@ -122,7 +185,18 @@ public class AttendanceService {
 
 	    return list;
 	}
-	
+	private Double toDouble(Object obj) {
+	    if (obj == null) return null;
+
+	    try {
+	        if (obj instanceof Number) {
+	            return ((Number) obj).doubleValue();
+	        }
+	        return Double.parseDouble(obj.toString());
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
 	 public Map<String, Object> getDashboardStats() {
 
 	        Map<String, Object> stats = new HashMap<>();
