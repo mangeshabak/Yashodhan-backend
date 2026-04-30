@@ -1,0 +1,157 @@
+package com.yashodhan.service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.yashodhan.dto.AttendanceDTO;
+import com.yashodhan.dto.LocationRequest;
+import com.yashodhan.entity.Attendance;
+import com.yashodhan.repository.AttendanceRepository;
+import com.yashodhan.repository.UserRepository;
+
+@Service
+public class AttendanceService {
+
+	@Autowired
+	private AttendanceRepository attendanceRepository;
+
+	@Autowired
+	private UserRepository userRepository;
+	
+	public Attendance checkIn(int employeeId, LocationRequest location) {
+
+		 LocalDate today = LocalDate.now();
+
+		    Optional<Attendance> existingAttendance =
+		            attendanceRepository.findByEmployeeIdAndAttendanceDate(employeeId, today);
+
+		    // Already checked in today
+		    if (existingAttendance.isPresent()) {
+		        throw new RuntimeException("Already checked in today");
+		    }
+		    
+	    Attendance attendance = new Attendance();
+
+	    attendance.setEmployeeId(employeeId);
+	    attendance.setCheckInTime(LocalDateTime.now());
+	    attendance.setAttendanceDate(LocalDate.now());
+	    attendance.setStatus("Present");
+
+	    // SAVE LOCATION
+	    attendance.setCheckInLatitude(location.getLatitude());
+	    attendance.setCheckInLongitude(location.getLongitude());
+
+	    return attendanceRepository.save(attendance);
+	}
+	
+	public Attendance checkOut(int attendanceId, LocationRequest location) {
+
+		  Attendance attendance = attendanceRepository.findById(attendanceId)
+		            .orElseThrow(() -> new RuntimeException("Attendance not found"));
+
+		    // Already checked out
+		    if (attendance.getCheckOutTime() != null) {
+		        throw new RuntimeException("Already checked out today");
+		    }
+		    
+	    attendance.setCheckOutTime(LocalDateTime.now());
+
+	    // SAVE LOCATION
+	    attendance.setCheckOutLatitude(location.getLatitude());
+	    attendance.setCheckOutLongitude(location.getLongitude());
+
+	    return attendanceRepository.save(attendance);
+	}
+
+	public List<Attendance> getAttendanceByEmployeeAndMonth(Long employeeId, int month) {
+		return attendanceRepository.findAttendanceByEmployeeAndMonth(employeeId, month);
+	}
+
+	public List<AttendanceDTO> getAllAttendance() {
+
+	    List<Object[]> results = attendanceRepository.getAllAttendanceRaw();
+
+	    List<AttendanceDTO> list = new ArrayList<>();
+
+	    for (Object[] row : results) {
+
+	        String employeeName = (String) row[0];
+
+	        LocalDate date;
+
+	        if (row[1] instanceof java.sql.Date) {
+	            date = ((java.sql.Date) row[1]).toLocalDate();
+	        } else if (row[1] instanceof java.time.LocalDateTime) {
+	            date = ((LocalDateTime) row[1]).toLocalDate();
+	        } else {
+	            date = ((java.sql.Timestamp) row[1]).toLocalDateTime().toLocalDate();
+	        }
+
+	        LocalDateTime checkIn = row[2] != null
+	                ? (LocalDateTime) row[2]
+	                : null;
+
+	        LocalDateTime checkOut = row[3] != null
+	                ? (LocalDateTime) row[3]
+	                : null;
+
+	        Double checkInLat = row[4] != null ? ((Number) row[4]).doubleValue() : null;
+	        Double checkInLng = row[5] != null ? ((Number) row[5]).doubleValue() : null;
+	        Double checkOutLat = row[6] != null ? ((Number) row[6]).doubleValue() : null;
+	        Double checkOutLng = row[7] != null ? ((Number) row[7]).doubleValue() : null;
+
+	        list.add(new AttendanceDTO(
+	                employeeName,
+	                date,
+	                checkIn,
+	                checkOut,
+	                checkInLat,
+	                checkInLng,
+	                checkOutLat,
+	                checkOutLng
+	        ));
+	    }
+
+	    return list;
+	}
+	
+	 public Map<String, Object> getDashboardStats() {
+
+	        Map<String, Object> stats = new HashMap<>();
+
+	        LocalDate today = LocalDate.now();
+	        
+	        long totalEmployees = userRepository.count();
+
+	        long presentToday = attendanceRepository.countPresentToday(today);
+
+	        long checkedIn = attendanceRepository.countCheckedInToday(today);
+
+	        long checkedOut = attendanceRepository.countCheckedOutToday(today);
+
+	        long absentToday = totalEmployees - presentToday;
+
+	        stats.put("totalEmployees", totalEmployees);
+	        stats.put("presentToday", presentToday);
+	        stats.put("absentToday", absentToday);
+	        stats.put("checkedIn", checkedIn);
+	        stats.put("checkedOut", checkedOut);
+
+	        return stats;
+	    }
+	 
+	   // ---------------- TODAY ATTENDANCE ----------------
+	    public Attendance getTodayAttendance(int employeeId) {
+	        return attendanceRepository
+	                .findByEmployeeIdAndAttendanceDate(employeeId, LocalDate.now())
+	                .orElse(null);
+	    }
+}
