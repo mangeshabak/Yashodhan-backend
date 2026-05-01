@@ -3,7 +3,10 @@ package com.yashodhan.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,9 +45,13 @@ public class Attendance {
     private Double checkOutLongitude;
     
     @Lob
+    @Basic(fetch = FetchType.EAGER)
+    @Column(columnDefinition = "BYTEA")
     private byte[] checkInSelfie;
 
     @Lob
+    @Basic(fetch = FetchType.EAGER)
+    @Column(columnDefinition = "BYTEA")
     private byte[] checkOutSelfie;
 
 	public int getId() {
