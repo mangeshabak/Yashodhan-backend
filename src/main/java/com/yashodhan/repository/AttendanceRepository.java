@@ -55,8 +55,10 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Integer 
     	        a.check_in_latitude,
     	        a.check_in_longitude,
     	        a.check_out_latitude,
-    	        a.check_out_longitude
-
+    	        a.check_out_longitude,
+    			
+    			a.check_in_selfie,
+    			a.check_out_selfie
     	    FROM attendance a
     	    JOIN users u ON a.employee_id = u.id
     	""", nativeQuery = true)

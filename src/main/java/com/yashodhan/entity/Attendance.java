@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
@@ -39,6 +40,12 @@ public class Attendance {
 
     private Double checkOutLatitude;
     private Double checkOutLongitude;
+    
+    @Lob
+    private byte[] checkInSelfie;
+
+    @Lob
+    private byte[] checkOutSelfie;
 
 	public int getId() {
 		return id;
@@ -118,6 +125,22 @@ public class Attendance {
 
 	public void setCheckOutLongitude(Double checkOutLongitude) {
 		this.checkOutLongitude = checkOutLongitude;
+	}
+
+	public byte[] getCheckInSelfie() {
+		return checkInSelfie;
+	}
+
+	public void setCheckInSelfie(byte[] checkInSelfie) {
+		this.checkInSelfie = checkInSelfie;
+	}
+
+	public byte[] getCheckOutSelfie() {
+		return checkOutSelfie;
+	}
+
+	public void setCheckOutSelfie(byte[] checkOutSelfie) {
+		this.checkOutSelfie = checkOutSelfie;
 	}
 
 

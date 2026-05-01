@@ -10,12 +10,14 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.yashodhan.dto.AttendanceDTO;
 import com.yashodhan.dto.LocationRequest;
 import com.yashodhan.entity.Attendance;
 import com.yashodhan.repository.AttendanceRepository;
 import com.yashodhan.repository.UserRepository;
+
 
 @Service
 public class AttendanceService {
@@ -26,7 +28,7 @@ public class AttendanceService {
 	@Autowired
 	private UserRepository userRepository;
 	
-	public Attendance checkIn(int employeeId, LocationRequest location) {
+	public Attendance checkIn(int employeeId, Double latitude, Double longitude, MultipartFile selfie) {
 
 		 LocalDate today = LocalDate.now();
 
@@ -46,13 +48,18 @@ public class AttendanceService {
 	    attendance.setStatus("Present");
 
 	    // SAVE LOCATION
-	    attendance.setCheckInLatitude(location.getLatitude());
-	    attendance.setCheckInLongitude(location.getLongitude());
+	    attendance.setCheckInLatitude(latitude);
+	    attendance.setCheckInLongitude(longitude);
 
+	    try {
+	        attendance.setCheckInSelfie(selfie.getBytes());
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to save selfie");
+	    }
 	    return attendanceRepository.save(attendance);
 	}
 	
-	public Attendance checkOut(int attendanceId, LocationRequest location) {
+	public Attendance checkOut(int attendanceId, Double latitude, Double longitude, MultipartFile selfie) {
 
 		  Attendance attendance = attendanceRepository.findById(attendanceId)
 		            .orElseThrow(() -> new RuntimeException("Attendance not found"));
@@ -65,9 +72,14 @@ public class AttendanceService {
 	    attendance.setCheckOutTime(LocalDateTime.now());
 
 	    // SAVE LOCATION
-	    attendance.setCheckOutLatitude(location.getLatitude());
-	    attendance.setCheckOutLongitude(location.getLongitude());
+	    attendance.setCheckOutLatitude(latitude);
+	    attendance.setCheckOutLongitude(longitude);
 
+	    try {
+	        attendance.setCheckOutSelfie(selfie.getBytes());
+	    } catch (Exception e) {
+	        throw new RuntimeException("Failed to save selfie");
+	    }
 	    return attendanceRepository.save(attendance);
 	}
 
@@ -75,38 +87,7 @@ public class AttendanceService {
 		return attendanceRepository.findAttendanceByEmployeeAndMonth(employeeId, month);
 	}
 
-	/*
-	 * public List<AttendanceDTO> getAllAttendance() {
-	 * 
-	 * List<Object[]> results = attendanceRepository.getAllAttendanceRaw();
-	 * 
-	 * List<AttendanceDTO> list = new ArrayList<>();
-	 * 
-	 * for (Object[] row : results) {
-	 * 
-	 * String employeeName = (String) row[0];
-	 * 
-	 * LocalDate date;
-	 * 
-	 * if (row[1] instanceof java.sql.Date) { date = ((java.sql.Date)
-	 * row[1]).toLocalDate(); } else if (row[1] instanceof java.time.LocalDateTime)
-	 * { date = ((LocalDateTime) row[1]).toLocalDate(); } else { date =
-	 * ((java.sql.Timestamp) row[1]).toLocalDateTime().toLocalDate(); }
-	 * 
-	 * LocalDateTime checkIn = row[2] != null ? (LocalDateTime) row[2] : null;
-	 * 
-	 * LocalDateTime checkOut = row[3] != null ? (LocalDateTime) row[3] : null;
-	 * 
-	 * Double checkInLat = row[4] != null ? ((Number) row[4]).doubleValue() : null;
-	 * Double checkInLng = row[5] != null ? ((Number) row[5]).doubleValue() : null;
-	 * Double checkOutLat = row[6] != null ? ((Number) row[6]).doubleValue() : null;
-	 * Double checkOutLng = row[7] != null ? ((Number) row[7]).doubleValue() : null;
-	 * 
-	 * list.add(new AttendanceDTO( employeeName, date, checkIn, checkOut,
-	 * checkInLat, checkInLng, checkOutLat, checkOutLng )); }
-	 * 
-	 * return list; }
-	 */
+	
 	public List<AttendanceDTO> getAllAttendance() {
 
 	    List<Object[]> results = attendanceRepository.getAllAttendanceRaw();
@@ -170,7 +151,31 @@ public class AttendanceService {
 	        Double checkInLng = toDouble(row[5]);
 	        Double checkOutLat = toDouble(row[6]);
 	        Double checkOutLng = toDouble(row[7]);
+	        byte[] checkInSelfie = null;
+	        byte[] checkOutSelfie = null;
 
+	        try {
+	            if (row[8] != null) {
+	                if (row[8] instanceof byte[]) {
+	                    checkInSelfie = (byte[]) row[8];
+	                } else if (row[8] instanceof java.sql.Blob) {
+	                    java.sql.Blob blob = (java.sql.Blob) row[8];
+	                    checkInSelfie = blob.getBytes(1, (int) blob.length());
+	                }
+	            }
+
+	            if (row[9] != null) {
+	                if (row[9] instanceof byte[]) {
+	                    checkOutSelfie = (byte[]) row[9];
+	                } else if (row[9] instanceof java.sql.Blob) {
+	                    java.sql.Blob blob = (java.sql.Blob) row[9];
+	                    checkOutSelfie = blob.getBytes(1, (int) blob.length());
+	                }
+	            }
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	        
 	        list.add(new AttendanceDTO(
 	                employeeName,
 	                date,
@@ -179,7 +184,9 @@ public class AttendanceService {
 	                checkInLat,
 	                checkInLng,
 	                checkOutLat,
-	                checkOutLng
+	                checkOutLng,
+	                checkInSelfie,
+	                checkOutSelfie
 	        ));
 	    }
 
@@ -228,4 +235,10 @@ public class AttendanceService {
 	                .findByEmployeeIdAndAttendanceDate(employeeId, LocalDate.now())
 	                .orElse(null);
 	    }
+	    
+	    public void deleteAttendance(Integer attendanceId) {
+	        attendanceRepository.deleteById(attendanceId);
+	    }
+
+		
 }

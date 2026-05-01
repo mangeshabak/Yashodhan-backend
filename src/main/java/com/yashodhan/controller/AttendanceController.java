@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.yashodhan.dto.AttendanceDTO;
 import com.yashodhan.dto.LocationRequest;
@@ -27,20 +29,29 @@ public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService;
 
-    @PostMapping("/checkin/{employeeId}")
-    public Attendance checkIn(
-            @PathVariable int employeeId,
-            @RequestBody LocationRequest location) {
+    @PostMapping(
+    	    value = "/checkin/{employeeId}",
+    	    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    	)
+    	public Attendance checkIn(
+    	        @PathVariable int employeeId,
+    	        @RequestParam("latitude") Double latitude,
+    	        @RequestParam("longitude") Double longitude,
+    	        @RequestParam("selfie") MultipartFile selfie
+    	) {
 
-        return attendanceService.checkIn(employeeId, location);
-    }
+    	    return attendanceService.checkIn(employeeId, latitude, longitude, selfie);
+    	}
 
-    @PutMapping("/checkout/{attendanceId}")
+    @PutMapping(value="/checkout/{attendanceId}",
+    	    consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Attendance checkOut(
             @PathVariable int attendanceId,
-            @RequestBody LocationRequest location) {
+            @RequestParam("latitude") Double latitude,
+	        @RequestParam("longitude") Double longitude,
+            @RequestParam MultipartFile selfie) {
 
-        return attendanceService.checkOut(attendanceId, location);
+        return attendanceService.checkOut(attendanceId, latitude, longitude, selfie);
     }
     
     @GetMapping("/history/{employeeId}")
@@ -65,5 +76,13 @@ public class AttendanceController {
     @GetMapping("/today/{employeeId}")
     public Attendance getToday(@PathVariable int employeeId) {
         return attendanceService.getTodayAttendance(employeeId);
+    }
+    
+    @PostMapping("/delete/{attendanceId}")
+    public ResponseEntity<String> deleteAttendance(@PathVariable Integer attendanceId) {
+
+        attendanceService.deleteAttendance(attendanceId);
+
+        return ResponseEntity.ok("Attendance deleted successfully");
     }
 }
