@@ -29,12 +29,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/attendance/all").permitAll().requestMatchers("/users/save").permitAll().anyRequest().permitAll()
+                .requestMatchers("/attendance/all").permitAll().requestMatchers("/users/save").permitAll().anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            );
-            //.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -22,10 +22,30 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Integer 
             @Param("month") int month);
     
 
+//    @Query(value = """
+//    	    SELECT 
+//    	        u.firstname || ' ' ||
+//    	        NVL(u.middlename, '') || ' ' ||
+//    	        u.lastname AS employeeName,
+//
+//    	        a.attendance_date,
+//    	        a.check_in_time,
+//    	        a.check_out_time,
+//
+//    	        a.check_in_latitude,
+//    	        a.check_in_longitude,
+//    	        a.check_out_latitude,
+//    	        a.check_out_longitude
+//
+//    	    FROM attendance a
+//    	    JOIN users u ON a.employee_id = u.id
+//    	""", nativeQuery = true)
+//    	List<Object[]> getAllAttendanceRaw();
+    
     @Query(value = """
     	    SELECT 
     	        u.firstname || ' ' ||
-    	        NVL(u.middlename, '') || ' ' ||
+    	        COALESCE(u.middlename, '') || ' ' ||
     	        u.lastname AS employeeName,
 
     	        a.attendance_date,
