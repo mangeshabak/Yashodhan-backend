@@ -44,14 +44,9 @@ public class Attendance {
     private Double checkOutLatitude;
     private Double checkOutLongitude;
     
-    @Lob
-    @Basic(fetch = FetchType.EAGER)
-    @Column(columnDefinition = "BYTEA")
+    
     private byte[] checkInSelfie;
 
-    @Lob
-    @Basic(fetch = FetchType.EAGER)
-    @Column(columnDefinition = "BYTEA")
     private byte[] checkOutSelfie;
 
 	public int getId() {
