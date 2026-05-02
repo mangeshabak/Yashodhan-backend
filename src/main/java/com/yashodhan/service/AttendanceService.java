@@ -294,13 +294,15 @@ public class AttendanceService {
 
 	            if (add) {
 
-	                result.add(new EmployeeSummaryDTO(
-	                        user.getId().intValue(),
-	                        user.getFirstname(),
-	                        user.getMiddlename(),
-	                        user.getLastname(),
-	                        present ? "Present" : "Absent"
-	                ));
+	            	result.add(new EmployeeSummaryDTO(
+	            	        user.getId().intValue(),
+	            	        user.getFirstname(),
+	            	        user.getMiddlename(),
+	            	        user.getLastname(),
+	            	        present ? "Present" : "Absent",
+	            	        attendance != null ? attendance.getCheckInTime() : null,
+	            	        attendance != null ? attendance.getCheckOutTime() : null
+	            	));
 	            }
 	        }
 
