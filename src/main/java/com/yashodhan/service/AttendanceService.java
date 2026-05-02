@@ -2,6 +2,7 @@ package com.yashodhan.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,24 +33,23 @@ public class AttendanceService {
 	
 	public Attendance checkIn(int employeeId, Double latitude, Double longitude, MultipartFile selfie) {
 
-		 LocalDate today = LocalDate.now();
+	    ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
+	    LocalDate today = LocalDate.now(indiaZone);
 
-		    Optional<Attendance> existingAttendance =
-		            attendanceRepository.findByEmployeeIdAndAttendanceDate(employeeId, today);
+	    Optional<Attendance> existingAttendance =
+	            attendanceRepository.findByEmployeeIdAndAttendanceDate(employeeId, today);
 
-		    // Already checked in today
-		    if (existingAttendance.isPresent()) {
-		        throw new RuntimeException("Already checked in today");
-		    }
-		    
+	    if (existingAttendance.isPresent()) {
+	        throw new RuntimeException("Already checked in today");
+	    }
+
 	    Attendance attendance = new Attendance();
 
 	    attendance.setEmployeeId(employeeId);
-	    attendance.setCheckInTime(LocalDateTime.now());
-	    attendance.setAttendanceDate(LocalDate.now());
+	    attendance.setCheckInTime(LocalDateTime.now(indiaZone));
+	    attendance.setAttendanceDate(LocalDate.now(indiaZone));
 	    attendance.setStatus("Present");
 
-	    // SAVE LOCATION
 	    attendance.setCheckInLatitude(latitude);
 	    attendance.setCheckInLongitude(longitude);
 
@@ -58,22 +58,23 @@ public class AttendanceService {
 	    } catch (Exception e) {
 	        throw new RuntimeException("Failed to save selfie");
 	    }
+
 	    return attendanceRepository.save(attendance);
 	}
 	
 	public Attendance checkOut(int attendanceId, Double latitude, Double longitude, MultipartFile selfie) {
 
-		  Attendance attendance = attendanceRepository.findById(attendanceId)
-		            .orElseThrow(() -> new RuntimeException("Attendance not found"));
+	    ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
 
-		    // Already checked out
-		    if (attendance.getCheckOutTime() != null) {
-		        throw new RuntimeException("Already checked out today");
-		    }
-		    
-	    attendance.setCheckOutTime(LocalDateTime.now());
+	    Attendance attendance = attendanceRepository.findById(attendanceId)
+	            .orElseThrow(() -> new RuntimeException("Attendance not found"));
 
-	    // SAVE LOCATION
+	    if (attendance.getCheckOutTime() != null) {
+	        throw new RuntimeException("Already checked out today");
+	    }
+
+	    attendance.setCheckOutTime(LocalDateTime.now(indiaZone));
+
 	    attendance.setCheckOutLatitude(latitude);
 	    attendance.setCheckOutLongitude(longitude);
 
@@ -82,9 +83,9 @@ public class AttendanceService {
 	    } catch (Exception e) {
 	        throw new RuntimeException("Failed to save selfie");
 	    }
+
 	    return attendanceRepository.save(attendance);
 	}
-
 	public List<Attendance> getAttendanceByEmployeeAndMonth(Long employeeId, int month) {
 		return attendanceRepository.findAttendanceByEmployeeAndMonth(employeeId, month);
 	}
