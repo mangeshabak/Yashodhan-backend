@@ -7,14 +7,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.yashodhan.dto.AttendanceDTO;
-import com.yashodhan.dto.LocationRequest;
+import com.yashodhan.dto.EmployeeSummaryDTO;
 import com.yashodhan.entity.Attendance;
+import com.yashodhan.entity.User;
 import com.yashodhan.repository.AttendanceRepository;
 import com.yashodhan.repository.UserRepository;
 
@@ -240,5 +242,67 @@ public class AttendanceService {
 	        attendanceRepository.deleteById(attendanceId);
 	    }
 
-		
+	    public List<EmployeeSummaryDTO> getEmployeesByType(String type) {
+
+	        List<User> users = userRepository.findAll();
+
+	        LocalDate today = LocalDate.now();
+
+	        List<Attendance> todayAttendance = attendanceRepository.findByAttendanceDate(today);
+
+	        Map<Integer, Attendance> attendanceMap = todayAttendance.stream()
+	                .collect(Collectors.toMap(
+	                        Attendance::getEmployeeId,
+	                        a -> a
+	                ));
+
+	        List<EmployeeSummaryDTO> result = new ArrayList<>();
+
+	        for (User user : users) {
+
+	            Attendance attendance = attendanceMap.get(user.getId().intValue());
+
+	            boolean present = attendance != null;
+	            boolean checkedIn = attendance != null && attendance.getCheckInTime() != null;
+	            boolean checkedOut = attendance != null && attendance.getCheckOutTime() != null;
+
+	            boolean add = false;
+
+	            switch (type.toLowerCase()) {
+
+	                case "total":
+	                    add = true;
+	                    break;
+
+	                case "present":
+	                    add = present;
+	                    break;
+
+	                case "absent":
+	                    add = !present;
+	                    break;
+
+	                case "checkin":
+	                    add = checkedIn;
+	                    break;
+
+	                case "checkout":
+	                    add = checkedOut;
+	                    break;
+	            }
+
+	            if (add) {
+
+	                result.add(new EmployeeSummaryDTO(
+	                        user.getId().intValue(),
+	                        user.getFirstname(),
+	                        user.getMiddlename(),
+	                        user.getLastname(),
+	                        present ? "Present" : "Absent"
+	                ));
+	            }
+	        }
+
+	        return result;
+	    }
 }

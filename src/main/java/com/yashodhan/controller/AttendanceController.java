@@ -10,14 +10,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.yashodhan.dto.AttendanceDTO;
-import com.yashodhan.dto.LocationRequest;
+import com.yashodhan.dto.EmployeeSummaryDTO;
 import com.yashodhan.entity.Attendance;
 import com.yashodhan.service.AttendanceService;
 
@@ -84,5 +83,12 @@ public class AttendanceController {
         attendanceService.deleteAttendance(attendanceId);
 
         return ResponseEntity.ok("Attendance deleted successfully");
+    }
+    
+    @GetMapping("/stats/details/{type}")
+    public List<EmployeeSummaryDTO> getStatsDetails(
+            @PathVariable String type) {
+
+        return attendanceService.getEmployeesByType(type);
     }
 }
