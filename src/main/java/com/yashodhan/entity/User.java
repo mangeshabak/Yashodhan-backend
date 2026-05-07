@@ -32,6 +32,7 @@ public class User {
     private Date dob;
     private String mobileNo;
     private int age;
+    private byte[] profileImage;
     
 	public Long getId() {
 		return id;
@@ -107,6 +108,13 @@ public class User {
 	}
 	public void setAge(int age) {
 		this.age = age;
+	}
+	
+	public byte[] getProfileImage() {
+		return profileImage;
+	}
+	public void setProfileImage(byte[] profileImage) {
+		this.profileImage = profileImage;
 	}
 	public User() {
 		super();
